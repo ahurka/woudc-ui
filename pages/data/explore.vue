@@ -12,14 +12,12 @@
     </i18n>
     <h3>{{ $t('data.explore.dataset.title') }}</h3>
     <v-select
-      class="woudc-select"
       :value="selectedDataset"
       :items="datasetOptions"
       :label="$t('data.explore.dataset.placeholder')"
-      item-text="name"
-      item-value="value"
+      item-text="text"
       solo
-      @input="clearAll()"
+      @input="changeDataset"
     />
     <h3>{{ $t('data.explore.country.title') }}</h3>
     <v-autocomplete
@@ -28,7 +26,7 @@
       :label="$t('data.explore.country.placeholder')"
       item-text="text"
       solo
-      @input="clearStationAndInstrument()"
+      @input="changeCountry"
     />
     <h3>{{ $t('data.explore.station.title') }}</h3>
     <v-autocomplete
@@ -37,7 +35,7 @@
       :label="$t('data.explore.station.placeholder')"
       item-text="text"
       solo
-      @input="clearInstrument()"
+      @input="changeStation"
     />
     <h3>{{ $t('data.explore.instrument.title') }}</h3>
     <v-select
@@ -140,8 +138,8 @@ export default {
 
       const datasetOptions = []
       datasetOptions.push({
-        name: this.$t('data.explore.dataset.all'),
-        value: 'All',
+        text: this.$t('data.explore.dataset.all'),
+        value: null
       })
 
       for (const [section, children] of Object.entries(datasetSections)) {
@@ -150,7 +148,7 @@ export default {
         })
         for (const [subsection, id] of Object.entries(children)) {
           datasetOptions.push({
-            name: this.$t('data.explore.dataset.' + section + '.' + subsection),
+            text: this.$t('data.explore.dataset.' + section + '.' + subsection),
             value: id
           })
         }
@@ -186,6 +184,27 @@ export default {
     ]
   },
   methods: {
+    changeDataset(dataset) {
+      this.selectedDataset = dataset
+      this.selectedCountry = null
+      this.selectedStation = null
+      this.selectedInstrument = null
+
+      this.refreshDropdowns()
+    },
+    changeCountry(country) {
+      this.selectedCountry = country
+      this.selectedStation = null
+      this.selectedInstrument = null
+
+      this.refreshDropdowns()
+    },
+    changeStation(station) {
+      this.selectedStation = station
+      this.selectedInstrument = null
+
+      this.refreshDropdowns()
+    },
     countryToSelectOption(country) {
       const countryCode = country.properties.country_code
       const countryName = country.properties.country_name_en
@@ -212,17 +231,48 @@ export default {
         value: stationID
       }
     },
-    clearAll() {
-      this.selectedCountry = null
-      this.selectedStation = null
-      this.selectedInstrument = null
+    async refreshDropdowns() {
+      const { countries, stations, instruments } = await this.sendDropdownRequest(
+        this.selectedDataset, this.selectedCountry, this.selectedStation
+      )
+
+      this.countries = countries
+      this.stations = stations.map((station) => {
+        station.geometry = {
+          type: station.geometry.type,
+          coordinates: [
+            station.geometry.coordinates[1],
+            station.geometry.coordinates[0]
+          ]
+        }
+        station.identifier = station.properties.station_id
+        return station
+      })
+      this.instruments = instruments
     },
-    clearStationAndInstrument() {
-      this.selectedStation = null
-      this.selectedInstrument = null
-    },
-    clearInstrument() {
-      this.selectedInstrument = null
+    async sendDropdownRequest(dataset, country, station) {
+      const dropdownsURL = '/processes/woudc-data-registry-dropdowns/jobs'
+      const inputs = []
+
+      const selections = { dataset, country, station }
+      for (const [domain, selected] of Object.entries(selections)) {
+        if (selected !== null) {
+          inputs.push({
+            id: domain,
+            type: 'text/plain',
+            value: selected
+          })
+        }
+      }
+
+      const queryParams = { inputs }
+      const response = await axios.post(dropdownsURL, queryParams)
+
+      const countries = response.data.outputs.countries
+      const stations = response.data.outputs.stations
+      const instruments = response.data.outputs.instruments
+
+      return { countries, stations, instruments }
     }
   },
   nuxtI18n: {
