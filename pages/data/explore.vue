@@ -24,30 +24,27 @@
     <h3>{{ $t('data.explore.country.title') }}</h3>
     <v-autocomplete
       :value="selectedCountry"
-      :items="countries"
+      :items="countryOptions"
       :label="$t('data.explore.country.placeholder')"
-      :item-text="countryText"
-      item-value="country_code"
+      item-text="text"
       solo
       @input="clearStationAndInstrument()"
     />
     <h3>{{ $t('data.explore.station.title') }}</h3>
     <v-autocomplete
       :value="selectedStation"
-      :items="stations"
+      :items="stationOptions"
       :label="$t('data.explore.station.placeholder')"
-      :item-text="stationText"
-      item-value="woudc_id"
+      item-text="text"
       solo
       @input="clearInstrument()"
     />
     <h3>{{ $t('data.explore.instrument.title') }}</h3>
     <v-select
       :value="selectedInstrument"
-      :items="instruments"
+      :items="instrumentOptions"
       :label="$t('data.explore.instrument.placeholder')"
-      :item-text="instrumentText"
-      item-value="name"
+      item-text="text"
       solo
     />
     <v-range-slider
@@ -67,52 +64,54 @@
 </template>
 
 <script>
+import axios from '~/plugins/axios'
+
 export default {
+  async asyncData() {
+    const dropdownsURL = '/processes/woudc-data-registry-dropdowns/jobs'
+    const queryParams = { inputs: [] }
+
+    const response = await axios.post(dropdownsURL, queryParams)
+
+    return {
+      countries: response.data.outputs.countries,
+      stations: response.data.outputs.stations.map((station) => {
+        station.geometry = {
+          type: station.geometry.type,
+          coordinates: [
+            station.geometry.coordinates[1],
+            station.geometry.coordinates[0]
+          ]
+        }
+        station.identifier = station.properties.station_id
+        return station
+      }),
+      instruments: response.data.outputs.instruments
+    }
+  },
   data() {
     return {
-      selectedDataset: null,
-      selectedCountry: null,
-      selectedStation: null,
-      selectedInstrument: null,
-      selectedYearRange: [null, null],
+      countries: [],
+      instruments: [],
       minSelectableYear: 1924,
-      countries: [
-        { country_code: null },
-        {
-          country_name: { en: 'Canada', fr: 'Canada' },
-          country_code: 'CAN'
-        },
-        {
-          country_name: { en: 'Nepal', fr: 'Nepal' },
-          country_code: 'NPL'
-        },
-        {
-          country_name: { en: 'Mount Kilimanjaro', fr: 'Mount Kilimanjaro' },
-          country_code: 'KMJ'
-        }
-      ],
-      stations: [
-        { woudc_id: null },
-        { name: 'Alert', woudc_id: '018' },
-        { name: 'Edmonton', woudc_id: '021' },
-        { name: 'Moosonee', woudc_id: '023' },
-        { name: 'Resolute', woudc_id: '024' },
-        { name: 'Toronto', woudc_id: '065' },
-        { name: 'Goose Bay', woudc_id: '076' },
-        { name: 'Churchill', woudc_id: '077' },
-        { name: 'Iqaluit', woudc_id: '303' },
-        { name: 'Eureka', woudc_id: '315' },
-        { name: 'Kelowna', woudc_id: '457' }
-      ],
-      instruments: [
-        { name: null },
-        { name: 'Brewer' },
-        { name: 'Dobson' },
-        { name: 'ECC' }
-      ]
+      selectedCountry: null,
+      selectedDataset: null,
+      selectedInstrument: null,
+      selectedStation: null,
+      selectedYearRange: [null, null],
+      stations: []
     }
   },
   computed: {
+    countryOptions() {
+      const nullOption = {
+        text: 'All',
+        value: null
+      }
+
+      const countryOptions = this.countries.map(this.countryToSelectOption)
+      return [ nullOption ].concat(countryOptions)
+    },
     datasetOptions() {
       const datasetSections = {
         totalozone: {
@@ -159,8 +158,26 @@ export default {
 
       return datasetOptions
     },
+    instrumentOptions() {
+      const nullOption = {
+        text: 'All',
+        value: null
+      }
+
+      const instrumentOptions = this.instruments.map(this.instrumentToSelectOption)
+      return [ nullOption ].concat(instrumentOptions)
+    },
     maxSelectableYear() {
       return (new Date()).getFullYear()
+    },
+    stationOptions() {
+      const nullOption = {
+        text: 'All',
+        value: null
+      }
+
+      const stationOptions = this.stations.map(this.stationToSelectOption)
+      return [ nullOption ].concat(stationOptions)
     }
   },
   mounted() {
@@ -169,26 +186,30 @@ export default {
     ]
   },
   methods: {
-    countryText(country) {
-      if (country.country_code === null) {
-        return '...'
-      } else {
-        const name = country.country_name[this.$i18n.locale]
-        return name + ' (' + country.country_code + ')'
+    countryToSelectOption(country) {
+      const countryCode = country.properties.country_code
+      const countryName = country.properties.country_name_en
+
+      return {
+        text: countryName + ' (' + countryCode + ')',
+        value: countryCode
       }
     },
-    stationText(station) {
-      if (station.woudc_id === null) {
-        return '...'
-      } else {
-        return station.name + ' (' + station.woudc_id + ')'
+    instrumentToSelectOption(instrument) {
+      const instrumentName = instrument.properties.instrument_name
+
+      return {
+        text: instrumentName,
+        value: instrumentName
       }
     },
-    instrumentText(instrument) {
-      if (instrument.name === null) {
-        return '...'
-      } else {
-        return instrument.name
+    stationToSelectOption(station) {
+      const stationID = station.properties.station_id
+      const stationName = station.properties.station_name
+
+      return {
+        text: stationName + ' (' + stationID + ')',
+        value: stationID
       }
     },
     clearAll() {
