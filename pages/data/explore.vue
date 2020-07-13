@@ -184,25 +184,66 @@ export default {
     ]
   },
   methods: {
-    changeDataset(dataset) {
+    async changeDataset(dataset) {
+      const { countries, stations, instruments } =
+        await this.sendDropdownRequest(dataset, null, null)
+
+      const countryRetained = countries.some((country) => {
+        return country.properties.country_code === this.selectedCountry
+      })
+      const stationRetained = stations.some((station) => {
+        return station.properties.station_id === this.selectedStation
+      })
+      const instrumentRetained = instruments.some((instrument) => {
+        return instrument.properties.instrument_name === this.selectedInstrument
+      })
+
+      if (!countryRetained) {
+        this.selectedCountry = null
+      }
+      if (!stationRetained) {
+        this.selectedStation = null
+      }
+      if (!instrumentRetained) {
+        this.selectedInstrument = null
+      }
+
       this.selectedDataset = dataset
-      this.selectedCountry = null
-      this.selectedStation = null
-      this.selectedInstrument = null
-
       this.refreshDropdowns()
     },
-    changeCountry(country) {
+    async changeCountry(country) {
+      const { stations, instruments } =
+        await this.sendDropdownRequest(this.selectedDataset, country, null)
+
+      const stationRetained = stations.some((station) => {
+        return station.properties.station_id === this.selectedStation
+      })
+      const instrumentRetained = instruments.some((instrument) => {
+        return instrument.properties.instrument_name === this.selectedInstrument
+      })
+
+      if (!stationRetained) {
+        this.selectedStation = null
+      }
+      if (!instrumentRetained) {
+        this.selectedInstrument = null
+      }
+
       this.selectedCountry = country
-      this.selectedStation = null
-      this.selectedInstrument = null
-
       this.refreshDropdowns()
     },
-    changeStation(station) {
-      this.selectedStation = station
-      this.selectedInstrument = null
+    async changeStation(station) {
+      const { instruments } = await this.sendDropdownRequest(
+        this.selectedDataset, this.selectedCountry, station)
 
+      const instrumentRetained = instruments.some((instrument) => {
+        return instrument.properties.instrument_name === this.selectedInstrument
+      })
+      if (!instrumentRetained) {
+        this.selectedInstrument = null
+      }
+
+      this.selectedStation = station
       this.refreshDropdowns()
     },
     countryToSelectOption(country) {
