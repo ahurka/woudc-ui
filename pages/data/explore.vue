@@ -20,28 +20,45 @@
       @input="changeDataset"
     />
     <h3>{{ $t('data.explore.country.title') }}</h3>
-    <v-autocomplete
+    <v-select
       :value="selectedCountry"
       :items="countryOptions"
       :label="$t('data.explore.country.placeholder')"
+      menu-props="auto"
       item-text="text"
       solo
       @input="changeCountry"
     />
+    <div id="orderSwitchContainer">
+      <span class="mt-1 mr-4 float-left">{{ $t('common.sort-by') }}</span>
+      <v-switch
+        v-model="orderCountryByID"
+        :label="countrySwitchText"
+      />
+    </div>
     <h3>{{ $t('data.explore.station.title') }}</h3>
-    <v-autocomplete
+    <v-select
       :value="selectedStation"
       :items="stationOptions"
       :label="$t('data.explore.station.placeholder')"
+      menu-props="auto"
       item-text="text"
       solo
       @input="changeStation"
     />
+    <div id="orderSwitchContainer">
+      <span class="mt-1 mr-4 float-left">{{ $t('common.sort-by') }}</span>
+      <v-switch
+        v-model="orderStationByID"
+        :label="stationSwitchText"
+      />
+    </div>
     <h3>{{ $t('data.explore.instrument.title') }}</h3>
     <v-select
       :value="selectedInstrument"
       :items="instrumentOptions"
       :label="$t('data.explore.instrument.placeholder')"
+      menu-props="auto"
       item-text="text"
       solo
     />
@@ -63,6 +80,7 @@
 
 <script>
 import axios from '~/plugins/axios'
+import { unpackageBareStation } from '~/plugins/unpackage'
 
 export default {
   async asyncData() {
@@ -72,32 +90,30 @@ export default {
     const response = await axios.post(dropdownsURL, queryParams)
 
     return {
-      countries: response.data.outputs.countries,
-      stations: response.data.outputs.stations.map((station) => {
-        station.geometry = {
-          type: station.geometry.type,
-          coordinates: [
-            station.geometry.coordinates[1],
-            station.geometry.coordinates[0]
-          ]
-        }
-        station.identifier = station.properties.station_id
-        return station
-      }),
-      instruments: response.data.outputs.instruments
+      countries: {
+        byID: response.data.outputs.countries.sortby_country_code,
+        byName: response.data.outputs.countries.sortby_country_name_en
+      },
+      stations: {
+        byID: response.data.outputs.stations.sortby_station_id.map(unpackageBareStation),
+        byName: response.data.outputs.stations.sortby_station_name.map(unpackageBareStation)
+      },
+      instruments: response.data.outputs.instruments.sortby_instrument_name
     }
   },
   data() {
     return {
-      countries: [],
+      countries: { byID: [], byName: [] },
       instruments: [],
+      orderCountryByID: false,
+      orderStationByID: false,
       minSelectableYear: 1924,
       selectedCountry: null,
       selectedDataset: null,
       selectedInstrument: null,
       selectedStation: null,
-      selectedYearRange: [null, null],
-      stations: []
+      selectedYearRange: [ null, null ],
+      stations: { byID: [], byName: [] }
     }
   },
   computed: {
@@ -107,8 +123,22 @@ export default {
         value: null
       }
 
-      const countryOptions = this.countries.map(this.countryToSelectOption)
+      let orderedCountries
+      if (this.orderCountryByID) {
+        orderedCountries = this.countries.byID
+      } else {
+        orderedCountries = this.countries.byName
+      }
+
+      const countryOptions = orderedCountries.map(this.countryToSelectOption)
       return [ nullOption ].concat(countryOptions)
+    },
+    countrySwitchText() {
+      if (this.orderCountryByID) {
+        return this.$t('data.explore.country.id-text')
+      } else {
+        return this.$t('data.explore.country.name-text')
+      }
     },
     datasetOptions() {
       const datasetSections = {
@@ -174,8 +204,22 @@ export default {
         value: null
       }
 
-      const stationOptions = this.stations.map(this.stationToSelectOption)
+      let orderedStations
+      if (this.orderStationByID) {
+        orderedStations = this.stations.byID
+      } else {
+        orderedStations = this.stations.byName
+      }
+
+      const stationOptions = orderedStations.map(this.stationToSelectOption)
       return [ nullOption ].concat(stationOptions)
+    },
+    stationSwitchText() {
+      if (this.orderStationByID) {
+        return this.$t('common.station-id')
+      } else {
+        return this.$t('common.station-name')
+      }
     }
   },
   mounted() {
@@ -188,13 +232,13 @@ export default {
       const { countries, stations, instruments } =
         await this.sendDropdownRequest(dataset, null, null)
 
-      const countryRetained = countries.some((country) => {
+      const countryRetained = countries.sortby_country_code.some((country) => {
         return country.properties.country_code === this.selectedCountry
       })
-      const stationRetained = stations.some((station) => {
+      const stationRetained = stations.sortby_station_id.some((station) => {
         return station.properties.station_id === this.selectedStation
       })
-      const instrumentRetained = instruments.some((instrument) => {
+      const instrumentRetained = instruments.sortby_instrument_name.some((instrument) => {
         return instrument.properties.instrument_name === this.selectedInstrument
       })
 
@@ -215,10 +259,10 @@ export default {
       const { stations, instruments } =
         await this.sendDropdownRequest(this.selectedDataset, country, null)
 
-      const stationRetained = stations.some((station) => {
+      const stationRetained = stations.sortby_station_id.some((station) => {
         return station.properties.station_id === this.selectedStation
       })
-      const instrumentRetained = instruments.some((instrument) => {
+      const instrumentRetained = instruments.sortby_instrument_name.some((instrument) => {
         return instrument.properties.instrument_name === this.selectedInstrument
       })
 
@@ -236,7 +280,7 @@ export default {
       const { instruments } = await this.sendDropdownRequest(
         this.selectedDataset, this.selectedCountry, station)
 
-      const instrumentRetained = instruments.some((instrument) => {
+      const instrumentRetained = instruments.sortby_instrument_name.some((instrument) => {
         return instrument.properties.instrument_name === this.selectedInstrument
       })
       if (!instrumentRetained) {
@@ -264,8 +308,8 @@ export default {
       }
     },
     stationToSelectOption(station) {
-      const stationID = station.properties.station_id
-      const stationName = station.properties.station_name
+      const stationID = station.station_id
+      const stationName = station.station_name
 
       return {
         text: stationName + ' (' + stationID + ')',
@@ -277,19 +321,15 @@ export default {
         this.selectedDataset, this.selectedCountry, this.selectedStation
       )
 
-      this.countries = countries
-      this.stations = stations.map((station) => {
-        station.geometry = {
-          type: station.geometry.type,
-          coordinates: [
-            station.geometry.coordinates[1],
-            station.geometry.coordinates[0]
-          ]
-        }
-        station.identifier = station.properties.station_id
-        return station
-      })
-      this.instruments = instruments
+      this.countries = {
+        byID: countries.sortby_country_code,
+        byName: countries.sortby_country_name_en
+      }
+      this.stations = {
+        byID: stations.sortby_station_id.map(unpackageBareStation),
+        byName: stations.sortby_station_name.map(unpackageBareStation)
+      }
+      this.instruments = instruments.sortby_instrument_name
     },
     async sendDropdownRequest(dataset, country, station) {
       const dropdownsURL = '/processes/woudc-data-registry-dropdowns/jobs'

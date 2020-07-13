@@ -17,13 +17,23 @@ function standardizedGeometry(geoJSON) {
 }
 
 function unpackageStation(geoJSON) {
-  const station = geoJSON.properties
+  const station = Object.assign({}, geoJSON.properties)
   station.identifier = station.woudc_id
 
   station.country_name = standardizedCountryName(geoJSON)
   station.geometry = standardizedGeometry(geoJSON)
   station.last_validated_datetime =
     station.last_validated_datetime.substring(0, 10)
+
+  return station
+}
+
+
+function unpackageBareStation(geoJSON) {
+  const station = Object.assign({}, geoJSON.properties)
+  station.identifier = station.woudc_id
+
+  station.geometry = standardizedGeometry(geoJSON)
 
   return station
 }
@@ -60,6 +70,7 @@ function unpackageDefault(geoJSON) {
 
 export {
   unpackageStation,
+  unpackageBareStation,
   unpackageContributor,
   unpackageInstrument,
   unpackageDeployment,
