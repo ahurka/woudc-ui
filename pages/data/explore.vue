@@ -67,14 +67,36 @@
       :min="minSelectableYear"
       :max="maxSelectableYear"
     />
-    <div id="start-year">
-      <h4>{{ $t('data.explore.start') }}</h4>
-      <input v-model="selectedYearRange[0]" type="text">
-    </div>
-    <div id="end-year">
-      <h4>{{ $t('data.explore.end') }}</h4>
-      <input v-model="selectedYearRange[1]" type="text">
-    </div>
+    <v-text-field
+      v-model="selectedYearRange[0]"
+      :label="$t('data.explore.start')"
+    >
+      <template v-slot:append>
+        <div class="mt-2">
+          <v-btn icon small @click="addToStartYear(1)">
+            <v-icon>mdi-plus-circle-outline</v-icon>
+          </v-btn>
+          <v-btn icon small @click="addToStartYear(-1)">
+            <v-icon>mdi-minus-circle-outline</v-icon>
+          </v-btn>
+        </div>
+      </template>
+    </v-text-field>
+    <v-text-field
+      v-model="selectedYearRange[1]"
+      :label="$t('data.explore.end')"
+    >
+      <template v-slot:append>
+        <div class="mt-2">
+          <v-btn icon small @click="addToEndYear(1)">
+            <v-icon>mdi-plus-circle-outline</v-icon>
+          </v-btn>
+          <v-btn icon small @click="addToEndYear(-1)">
+            <v-icon>mdi-minus-circle-outline</v-icon>
+          </v-btn>
+        </div>
+      </template>
+    </v-text-field>
   </v-layout>
 </template>
 
@@ -228,6 +250,30 @@ export default {
     ]
   },
   methods: {
+    addToStartYear(amount) {
+      const oldEndYear = this.selectedYearRange[1]
+      let newStartYear = this.selectedYearRange[0] + amount
+
+      if (newStartYear < this.minSelectableYear) {
+        newStartYear = this.minSelectableYear
+      } else if (newStartYear > oldEndYear) {
+        newStartYear = oldEndYear
+      }
+
+      this.selectedYearRange = [ newStartYear, oldEndYear ]
+    },
+    addToEndYear(amount) {
+      const oldStartYear = this.selectedYearRange[0]
+      let newEndYear = this.selectedYearRange[1] + amount
+
+      if (newEndYear < oldStartYear) {
+        newEndYear = oldStartYear
+      } else if (newEndYear > this.maxSelectableYear) {
+        newEndYear = this.maxSelectableYear
+      }
+
+      this.selectedYearRange = [ oldStartYear, newEndYear ]
+    },
     async changeDataset(dataset) {
       const { countries, stations, instruments } =
         await this.sendDropdownRequest(dataset, null, null)
