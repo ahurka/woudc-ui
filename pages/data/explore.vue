@@ -15,10 +15,18 @@
       :value="selectedDataset"
       :items="datasetOptions"
       :label="$t('data.explore.dataset.placeholder')"
+      menu-props="auto"
       item-text="text"
       solo
+      dense
       @input="changeDataset"
-    />
+    >
+      <template v-slot:selection="selection">
+        <div class="my-3">
+          {{ selection.item.text }}
+        </div>
+      </template>
+    </v-select>
     <h3>{{ $t('data.explore.country.title') }}</h3>
     <v-select
       :value="selectedCountry"
@@ -27,8 +35,15 @@
       menu-props="auto"
       item-text="text"
       solo
+      dense
       @input="changeCountry"
-    />
+    >
+      <template v-slot:selection="selection">
+        <div class="my-3">
+          {{ selection.item.text }}
+        </div>
+      </template>
+    </v-select>
     <div id="orderSwitchContainer">
       <span class="mt-1 mr-4 float-left">{{ $t('common.sort-by') }}</span>
       <v-switch
@@ -44,8 +59,15 @@
       menu-props="auto"
       item-text="text"
       solo
+      dense
       @input="changeStation"
-    />
+    >
+      <template v-slot:selection="selection">
+        <div class="my-3">
+          {{ selection.item.text }}
+        </div>
+      </template>
+    </v-select>
     <div id="orderSwitchContainer">
       <span class="mt-1 mr-4 float-left">{{ $t('common.sort-by') }}</span>
       <v-switch
@@ -61,7 +83,14 @@
       menu-props="auto"
       item-text="text"
       solo
-    />
+      dense
+    >
+      <template v-slot:selection="selection">
+        <div class="my-3">
+          {{ selection.item.text }}
+        </div>
+      </template>
+    </v-select>
     <v-range-slider
       v-model="selectedYearRange"
       :min="minSelectableYear"
@@ -551,31 +580,10 @@ export default {
 </script>
 
 <style scoped>
-.v-select-list >>> .v-list {
-  padding: 0px;
-}
-
 .v-select-list >>> .v-subheader {
   font-weight: bold;
   background-color: #e4e4e4;
-  max-height: 40px;
   padding-left: 12px;
-  margin-left: 0px;
-}
-
-.v-select >>> .v-input__slot {
-  max-width: 60%;
-}
-
-.v-select-list >>> .v-list-item {
-  padding-left: 24px;
-}
-
-.v-select-list >>> .v-list-item,
-.v-select-list >>> .v-list-item__content {
-  padding-top: 0px;
-  padding-bottom: 0px;
-  min-height: 32px;
 }
 
 .btn-left {
