@@ -113,23 +113,35 @@
     <span v-if="!dataRecordSearch.exists" class="red--text">
       {{ $t('data.explore.no-results') }}
     </span>
-    <v-data-table
-      v-else
-      class="elevation-1"
-      :headers="searchResultHeaders"
-      :items="dataRecordSearch.results"
-    >
-      <template v-slot:item.platform_id="row">
-        <nuxt-link :to="localePath('data-stations') + '/' + row.item.platform_id">
-          {{ row.item.platform_id }}
+    <div v-else>
+      <v-card v-if="searchOutOfDate" class="mt-1 mb-4" color="warning">
+        <v-card-title class="pt-3 pb-0">
+          <v-icon class="mr-1">mdi-alert</v-icon>
+          {{ $t('data.explore.old-search.title') }}
+        </v-card-title>
+        <i18n path="data.explore.old-search.body" tag="v-card-text">
+          <template v-slot:search>
+            <strong>{{ $t('common.search') }}</strong>
+          </template>
+        </i18n>
+      </v-card>
+      <v-data-table
+        class="elevation-1"
+        :headers="searchResultHeaders"
+        :items="dataRecordSearch.results"
+      >
+        <template v-slot:item.platform_id="row">
+          <nuxt-link :to="localePath('data-stations') + '/' + row.item.platform_id">
+            {{ row.item.platform_id }}
         </nuxt-link>
-      </template>
-      <template v-slot:item.actions="row">
-        <a :href="row.item.url" target="_blank">
-          <v-icon>mdi-file-download</v-icon>
-        </a>
-      </template>
-    </v-data-table>
+        </template>
+        <template v-slot:item.actions="row">
+          <a :href="row.item.url" target="_blank">
+            <v-icon>mdi-file-download</v-icon>
+          </a>
+        </template>
+      </v-data-table>
+    </div>
   </v-layout>
 </template>
 
@@ -160,8 +172,14 @@ export default {
     return {
       countries: { byID: [], byName: [] },
       dataRecordSearch: {
+        country: null,
+        dataset: null,
         exists: false,
-        results: []
+        instrument: null,
+        results: [],
+        station: null,
+        'end-year': null,
+        'start-year': null
       },
       instruments: [],
       orderCountryByID: false,
@@ -279,6 +297,16 @@ export default {
       } else {
         return this.$t('common.station-name')
       }
+    },
+    searchOutOfDate() {
+      const datasetOk = this.dataRecordSearch.dataset === this.selectedDataset
+      const countryOk = this.dataRecordSearch.country === this.selectedCountry
+      const stationOk = this.dataRecordSearch.station === this.selectedStation
+      const instrumentOk = this.dataRecordSearch.instrument === this.selectedInstrument
+      const startYearOk = this.dataRecordSearch['start-year'] === this.selectedYearRange[0]
+      const endYearOk = this.dataRecordSearch['end-year'] === this.selectedYearRange[1]
+
+      return !(datasetOk && countryOk && stationOk && instrumentOk && startYearOk && endYearOk)
     },
     searchResultHeaders() {
       const headerKeys = [
@@ -431,8 +459,14 @@ export default {
       ]
 
       this.dataRecordSearch = {
+        country: null,
+        dataset: null,
         exists: false,
-        result: []
+        instrument: null,
+        result: [],
+        station: null,
+        'end-year': null,
+        'start-year': null
       }
     },
     async refreshDataRecords() {
@@ -455,10 +489,16 @@ export default {
       const response = await axios.get(dataRecordsURL + '?' + queryParams)
 
       this.dataRecordSearch = {
+        country: this.selectedCountry,
+        dataset: this.selectedDataset,
         exists: true,
+        instrument: this.selectedInstrument,
         results: response.data.features.map((record) => {
           return record.properties
-        })
+        }),
+        station: this.selectedStation,
+        'end-year': this.selectedYearRange[1],
+        'start-year': this.selectedYearRange[0]
       }
     },
     async refreshDropdowns() {

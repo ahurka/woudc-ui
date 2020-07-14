@@ -935,6 +935,10 @@
         "title": "Instrument"
       },
       "no-results": "No search submitted yet",
+      "old-search": {
+        "body": "You have made changes in the search form that do not match with the current search results displayed. Please press the {search} button to update the search results.",
+        "title": "Outdated Search Results"
+      },
       "search-results": "Search Results",
       "start": "Start",
       "station": {

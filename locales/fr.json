@@ -934,6 +934,10 @@
         "title": "Instrument"
       },
       "no-results": "Aucune recherche n’a été effectuée.",
+      "old-search": {
+        "body": "Vous avez apporté des modifications dans le formulaire de recherche qui ne correspondent pas avec les résultats de la recherche affichés actuellement. S'il vous plaît appuyez sur la {search} pour mettre à jour les résultats de la recherche.",
+        "title": "Anciens résultats"
+      },
       "search-results": "Résultats de la recherche",
       "start": "Début",
       "station": {
