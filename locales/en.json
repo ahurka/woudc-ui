@@ -941,6 +941,15 @@
         "placeholder": "Select a Station",
         "title": "Station"
       },
+      "table-headers": {
+        "timestamp-date": "Observation Date (UTC)",
+        "content-category": "Dataset Name",
+        "platform-type": "Platform Type",
+        "platform-id": "Platform ID",
+        "instrument-name": "Instrument Name",
+        "processed-datetime": "Processed Datetime",
+        "actions": "Actions"
+      },
       "title": "Data Search / Download"
     },
     "info": {

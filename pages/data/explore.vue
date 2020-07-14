@@ -101,7 +101,7 @@
       <v-btn
         class="btn-left"
         color="primary"
-        @click="oldSearchParams.exists = true"
+        @click="refreshDataRecords()"
       >
         {{ $t('common.search') }}
       </v-btn>
@@ -110,9 +110,26 @@
       </v-btn>
     </div>
     <h2>{{ $t('data.explore.search-results') }}</h2>
-    <span v-if="!oldSearchParams.exists" class="red--text">
+    <span v-if="!dataRecordSearch.exists" class="red--text">
       {{ $t('data.explore.no-results') }}
     </span>
+    <v-data-table
+      v-else
+      class="elevation-1"
+      :headers="searchResultHeaders"
+      :items="dataRecordSearch.results"
+    >
+      <template v-slot:item.platform_id="row">
+        <nuxt-link :to="localePath('data-stations') + '/' + row.item.platform_id">
+          {{ row.item.platform_id }}
+        </nuxt-link>
+      </template>
+      <template v-slot:item.actions="row">
+        <a :href="row.item.url" target="_blank">
+          <v-icon>mdi-file-download</v-icon>
+        </a>
+      </template>
+    </v-data-table>
   </v-layout>
 </template>
 
@@ -142,10 +159,11 @@ export default {
   data() {
     return {
       countries: { byID: [], byName: [] },
-      instruments: [],
-      oldSearchParams: {
-        exists: false
+      dataRecordSearch: {
+        exists: false,
+        results: []
       },
+      instruments: [],
       orderCountryByID: false,
       orderStationByID: false,
       minSelectableYear: 1924,
@@ -261,6 +279,24 @@ export default {
       } else {
         return this.$t('common.station-name')
       }
+    },
+    searchResultHeaders() {
+      const headerKeys = [
+        'timestamp_date',
+        'content_category',
+        'platform_type',
+        'platform_id',
+        'instrument_name',
+        'processed_datetime',
+        'actions'
+      ]
+
+      return headerKeys.map((key) => {
+        return {
+          text: this.$t('data.explore.table-headers.' + key.replace('_', '-')),
+          value: key
+        }
+      })
     }
   },
   mounted() {
@@ -393,6 +429,37 @@ export default {
         this.minSelectableYear,
         this.maxSelectableYear
       ]
+
+      this.dataRecordSearch = {
+        exists: false,
+        result: []
+      }
+    },
+    async refreshDataRecords() {
+      const dataRecordsURL = '/collections/data_records/items'
+      let queryParams = 'sortby=platform_id:A,timestamp_date:A'
+
+      const selected = {
+        'content_category': this.selectedDataset,
+        'platform_country': this.selectedCountry,
+        'platform_id': this.selectedStation,
+        'instrument_name': this.selectedInstrument
+      }
+
+      for (const [field, value] of Object.entries(selected)) {
+        if (value !== null) {
+          queryParams += '&' + field + '=' + value
+        }
+      }
+
+      const response = await axios.get(dataRecordsURL + '?' + queryParams)
+
+      this.dataRecordSearch = {
+        exists: true,
+        results: response.data.features.map((record) => {
+          return record.properties
+        })
+      }
     },
     async refreshDropdowns() {
       const { countries, stations, instruments } = await this.sendDropdownRequest(

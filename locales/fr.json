@@ -940,6 +940,15 @@
         "placeholder": "Choisis une Station",
         "title": "Station"
       },
+      "table-headers": {
+        "timestamp-date": "Date de l’observation (UTC)",
+        "content-category": "Nom de l’ensemble de données",
+        "platform-type": "Type de plate-forme",
+        "platform-id": "Identification de la plate-forme",
+        "instrument-name": "Nom de l’instrument",
+        "processed-datetime": "Date et heure de traitement",
+        "actions": "Actions"
+      },
       "title": "Rechercher des données / Télécharger"
     },
     "info": {
