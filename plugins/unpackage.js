@@ -31,7 +31,7 @@ function unpackageStation(geoJSON) {
 
 function unpackageBareStation(geoJSON) {
   const station = Object.assign({}, geoJSON.properties)
-  station.identifier = station.woudc_id
+  station.identifier = station.woudc_id || station.station_id
 
   station.geometry = standardizedGeometry(geoJSON)
 

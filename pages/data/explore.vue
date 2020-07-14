@@ -10,122 +10,139 @@
         </nuxt-link>
       </template>
     </i18n>
-    <h3>{{ $t('data.explore.dataset.title') }}</h3>
-    <v-select
-      :value="selectedDataset"
-      :items="datasetOptions"
-      :label="$t('data.explore.dataset.placeholder')"
-      menu-props="auto"
-      item-text="text"
-      solo
-      dense
-      @input="changeDataset"
-    >
-      <template v-slot:selection="selection">
-        <div class="my-3">
-          {{ selection.item.text }}
+    <v-row>
+      <v-col>
+        <h3>{{ $t('data.explore.dataset.title') }}</h3>
+        <v-select
+          :value="selectedDataset"
+          :items="datasetOptions"
+          :label="$t('data.explore.dataset.placeholder')"
+          menu-props="auto"
+          item-text="text"
+          solo
+          dense
+          @input="changeDataset"
+        >
+          <template v-slot:selection="selection">
+            <div class="my-3">
+              {{ selection.item.text }}
+            </div>
+          </template>
+        </v-select>
+        <h3>{{ $t('data.explore.country.title') }}</h3>
+        <v-select
+          :value="selectedCountry"
+          :items="countryOptions"
+          :label="$t('data.explore.country.placeholder')"
+          menu-props="auto"
+          item-text="text"
+          solo
+          dense
+          @input="changeCountry"
+        >
+          <template v-slot:selection="selection">
+            <div class="my-3">
+              {{ selection.item.text }}
+            </div>
+          </template>
+        </v-select>
+        <div id="orderSwitchContainer">
+          <span class="mt-1 mr-4 float-left">{{ $t('common.sort-by') }}</span>
+          <v-switch
+            v-model="orderCountryByID"
+            :label="countrySwitchText"
+          />
         </div>
-      </template>
-    </v-select>
-    <h3>{{ $t('data.explore.country.title') }}</h3>
-    <v-select
-      :value="selectedCountry"
-      :items="countryOptions"
-      :label="$t('data.explore.country.placeholder')"
-      menu-props="auto"
-      item-text="text"
-      solo
-      dense
-      @input="changeCountry"
-    >
-      <template v-slot:selection="selection">
-        <div class="my-3">
-          {{ selection.item.text }}
+        <h3>{{ $t('data.explore.station.title') }}</h3>
+        <v-select
+          :value="selectedStationID"
+          :items="stationOptions"
+          :label="$t('data.explore.station.placeholder')"
+          menu-props="auto"
+          item-text="text"
+          return-object
+          solo
+          dense
+          @input="changeStation($event.element)"
+        >
+          <template v-slot:selection="selection">
+            <div class="my-3">
+              {{ selection.item.text }}
+            </div>
+          </template>
+        </v-select>
+        <div id="orderSwitchContainer">
+          <span class="mt-1 mr-4 float-left">{{ $t('common.sort-by') }}</span>
+          <v-switch
+            v-model="orderStationByID"
+            :label="stationSwitchText"
+          />
         </div>
-      </template>
-    </v-select>
-    <div id="orderSwitchContainer">
-      <span class="mt-1 mr-4 float-left">{{ $t('common.sort-by') }}</span>
-      <v-switch
-        v-model="orderCountryByID"
-        :label="countrySwitchText"
-      />
-    </div>
-    <h3>{{ $t('data.explore.station.title') }}</h3>
-    <v-select
-      :value="selectedStation"
-      :items="stationOptions"
-      :label="$t('data.explore.station.placeholder')"
-      menu-props="auto"
-      item-text="text"
-      solo
-      dense
-      @input="changeStation"
-    >
-      <template v-slot:selection="selection">
-        <div class="my-3">
-          {{ selection.item.text }}
-        </div>
-      </template>
-    </v-select>
-    <div id="orderSwitchContainer">
-      <span class="mt-1 mr-4 float-left">{{ $t('common.sort-by') }}</span>
-      <v-switch
-        v-model="orderStationByID"
-        :label="stationSwitchText"
-      />
-    </div>
-    <h3>{{ $t('data.explore.instrument.title') }}</h3>
-    <v-select
-      v-model="selectedInstrument"
-      :items="instrumentOptions"
-      :label="$t('data.explore.instrument.placeholder')"
-      menu-props="auto"
-      item-text="text"
-      solo
-      dense
-    >
-      <template v-slot:selection="selection">
-        <div class="my-3">
-          {{ selection.item.text }}
-        </div>
-      </template>
-    </v-select>
-    <v-range-slider
-      v-model="selectedYearRange"
-      :min="minSelectableYear"
-      :max="maxSelectableYear"
-    />
-    <v-text-field
-      v-model="selectedYearRange[0]"
-      :label="$t('data.explore.start')"
-    >
-      <template v-slot:append>
-        <div class="mt-2">
-          <v-btn icon small @click="addToStartYear(1)">
-            <v-icon>mdi-plus-circle-outline</v-icon>
-          </v-btn>
-          <v-btn icon small @click="addToStartYear(-1)">
-            <v-icon>mdi-minus-circle-outline</v-icon>
-          </v-btn>
-        </div>
-      </template>
-    </v-text-field>
-    <v-text-field
-      v-model="selectedYearRange[1]"
-      :label="$t('data.explore.end')"
-    >
-      <template v-slot:append>
-        <div class="mt-2">
-          <v-btn icon small @click="addToEndYear(1)">
-            <v-icon>mdi-plus-circle-outline</v-icon>
-          </v-btn>
-          <v-btn icon small @click="addToEndYear(-1)">
-            <v-icon>mdi-minus-circle-outline</v-icon>
-          </v-btn>
-        </div>
-      </template>
-    </v-text-field>
+        <h3>{{ $t('data.explore.instrument.title') }}</h3>
+        <v-select
+          v-model="selectedInstrument"
+          :items="instrumentOptions"
+          :label="$t('data.explore.instrument.placeholder')"
+          menu-props="auto"
+          item-text="text"
+          solo
+          dense
+        >
+          <template v-slot:selection="selection">
+            <div class="my-3">
+              {{ selection.item.text }}
+            </div>
+          </template>
+        </v-select>
+        <v-range-slider
+          v-model="selectedYearRange"
+          :min="minSelectableYear"
+          :max="maxSelectableYear"
+        />
+        <v-text-field
+          v-model="selectedYearRange[0]"
+          :label="$t('data.explore.start')"
+        >
+          <template v-slot:append>
+            <div class="mt-2">
+              <v-btn icon small @click="addToStartYear(1)">
+                <v-icon>mdi-plus-circle-outline</v-icon>
+              </v-btn>
+              <v-btn icon small @click="addToStartYear(-1)">
+                <v-icon>mdi-minus-circle-outline</v-icon>
+              </v-btn>
+            </div>
+          </template>
+        </v-text-field>
+        <v-text-field
+          v-model="selectedYearRange[1]"
+          :label="$t('data.explore.end')"
+        >
+          <template v-slot:append>
+            <div class="mt-2">
+              <v-btn icon small @click="addToEndYear(1)">
+                <v-icon>mdi-plus-circle-outline</v-icon>
+              </v-btn>
+              <v-btn icon small @click="addToEndYear(-1)">
+                <v-icon>mdi-minus-circle-outline</v-icon>
+              </v-btn>
+            </div>
+          </template>
+        </v-text-field>
+      </v-col>
+      <v-col>
+        <map-instructions id="map-instructions" />
+        <selectable-map
+          :elements="stations.byID"
+          :selected="selectedStation"
+        >
+          <template v-slot:popup="element">
+            {{ element.item.station_name }}
+            ({{ element.item.station_id }})
+          </template>
+        </selectable-map>
+      </v-col>
+    </v-row>
     <div>
       <v-btn
         class="btn-left"
@@ -178,7 +195,14 @@
 import axios from '~/plugins/axios'
 import { unpackageBareStation } from '~/plugins/unpackage'
 
+import MapInstructions from '~/components/MapInstructions'
+import SelectableMap from '~/components/SelectableMap'
+
 export default {
+  components: {
+    'map-instructions': MapInstructions,
+    'selectable-map': SelectableMap
+  },
   async asyncData() {
     const dropdownsURL = '/processes/woudc-data-registry-dropdowns/jobs'
     const queryParams = { inputs: [] }
@@ -218,6 +242,7 @@ export default {
       selectedDataset: null,
       selectedInstrument: null,
       selectedStation: null,
+      selectedStationID: null,
       selectedYearRange: [ null, null ],
       stations: { byID: [], byName: [] }
     }
@@ -330,7 +355,7 @@ export default {
     searchOutOfDate() {
       const datasetOk = this.dataRecordSearch.dataset === this.selectedDataset
       const countryOk = this.dataRecordSearch.country === this.selectedCountry
-      const stationOk = this.dataRecordSearch.station === this.selectedStation
+      const stationOk = this.dataRecordSearch.station === this.selectedStationID
       const instrumentOk = this.dataRecordSearch.instrument === this.selectedInstrument
       const startYearOk = this.dataRecordSearch['start-year'] === this.selectedYearRange[0]
       const endYearOk = this.dataRecordSearch['end-year'] === this.selectedYearRange[1]
@@ -394,7 +419,7 @@ export default {
         return country.properties.country_code === this.selectedCountry
       })
       const stationRetained = stations.sortby_station_id.some((station) => {
-        return station.properties.station_id === this.selectedStation
+        return station.properties.station_id === this.selectedStationID
       })
       const instrumentRetained = instruments.sortby_instrument_name.some((instrument) => {
         return instrument.properties.instrument_name === this.selectedInstrument
@@ -405,6 +430,7 @@ export default {
       }
       if (!stationRetained) {
         this.selectedStation = null
+        this.selectedStationID = null
       }
       if (!instrumentRetained) {
         this.selectedInstrument = null
@@ -418,7 +444,7 @@ export default {
         await this.sendDropdownRequest(this.selectedDataset, country, null)
 
       const stationRetained = stations.sortby_station_id.some((station) => {
-        return station.properties.station_id === this.selectedStation
+        return station.properties.station_id === this.selectedStationID
       })
       const instrumentRetained = instruments.sortby_instrument_name.some((instrument) => {
         return instrument.properties.instrument_name === this.selectedInstrument
@@ -426,6 +452,7 @@ export default {
 
       if (!stationRetained) {
         this.selectedStation = null
+        this.selectedStationID = null
       }
       if (!instrumentRetained) {
         this.selectedInstrument = null
@@ -436,7 +463,7 @@ export default {
     },
     async changeStation(station) {
       const { instruments } = await this.sendDropdownRequest(
-        this.selectedDataset, this.selectedCountry, station)
+        this.selectedDataset, this.selectedCountry, station.identifier)
 
       const instrumentRetained = instruments.sortby_instrument_name.some((instrument) => {
         return instrument.properties.instrument_name === this.selectedInstrument
@@ -446,6 +473,7 @@ export default {
       }
 
       this.selectedStation = station
+      this.selectedStationID = station.identifier
       this.refreshDropdowns()
     },
     countryToSelectOption(country) {
@@ -471,13 +499,15 @@ export default {
 
       return {
         text: stationName + ' (' + stationID + ')',
-        value: stationID
+        value: stationID,
+        element: station
       }
     },
     reset() {
       this.selectedDataset = null
       this.selectedCountry = null
       this.selectedStation = null
+      this.selectedStationID = null
       this.selectedInstrument = null
 
       this.refreshDropdowns()
@@ -505,7 +535,7 @@ export default {
       const selected = {
         'content_category': this.selectedDataset,
         'platform_country': this.selectedCountry,
-        'platform_id': this.selectedStation,
+        'platform_id': this.selectedStationID,
         'instrument_name': this.selectedInstrument
       }
 
@@ -525,14 +555,14 @@ export default {
         results: response.data.features.map((record) => {
           return record.properties
         }),
-        station: this.selectedStation,
+        station: this.selectedStationID,
         'end-year': this.selectedYearRange[1],
         'start-year': this.selectedYearRange[0]
       }
     },
     async refreshDropdowns() {
       const { countries, stations, instruments } = await this.sendDropdownRequest(
-        this.selectedDataset, this.selectedCountry, this.selectedStation
+        this.selectedDataset, this.selectedCountry, this.selectedStationID
       )
 
       this.countries = {
