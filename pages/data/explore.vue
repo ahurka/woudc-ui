@@ -135,6 +135,8 @@
         <selectable-map
           :elements="stations.byID"
           :selected="selectedStation"
+          @select="changeStation"
+          @move="mapBoundingBox = $event"
         >
           <template v-slot:popup="element">
             {{ element.item.station_name }}
@@ -237,6 +239,7 @@ export default {
       instruments: [],
       orderCountryByID: false,
       orderStationByID: false,
+      mapBoundingBox: null,
       minSelectableYear: 1924,
       selectedCountry: null,
       selectedDataset: null,
@@ -248,6 +251,14 @@ export default {
     }
   },
   computed: {
+    boundingBoxArray() {
+      return [
+        Math.max(-180, this.mapBoundingBox.getWest()),
+        Math.max(-90, this.mapBoundingBox.getSouth()),
+        Math.min(180, this.mapBoundingBox.getEast()),
+        Math.min(90, this.mapBoundingBox.getNorth())
+      ]
+    },
     countryOptions() {
       const nullOption = {
         text: 'All',
@@ -342,8 +353,21 @@ export default {
         orderedStations = this.stations.byName
       }
 
-      const stationOptions = orderedStations.map(this.stationToSelectOption)
-      return [ nullOption ].concat(stationOptions)
+      if (this.mapBoundingBox === null) {
+        const stationOptions = orderedStations.map(this.stationToSelectOption)
+        return [ nullOption ].concat(stationOptions)
+      } else {
+        const visibleOptions = orderedStations.filter((station) => {
+          const selected = station.identifier === this.selectedStationID
+          const coords = this.$L.latLng(station.geometry.coordinates)
+          const visible = this.mapBoundingBox.contains(coords)
+
+          return selected || visible
+        })
+
+        const stationOptions = visibleOptions.map(this.stationToSelectOption)
+        return [ nullOption ].concat(stationOptions)
+      }
     },
     stationSwitchText() {
       if (this.orderStationByID) {
@@ -462,8 +486,19 @@ export default {
       this.refreshDropdowns()
     },
     async changeStation(station) {
+      if (station === null) {
+        this.selectedStation = null
+        this.selectedStationID = null
+      } else if ('element' in station) {
+        this.selectedStation = station.element
+        this.selectedStationID = station.value
+      } else {
+        this.selectedStation = station
+        this.selectedStationID = station.identifier
+      }
+
       const { instruments } = await this.sendDropdownRequest(
-        this.selectedDataset, this.selectedCountry, station.identifier)
+        this.selectedDataset, this.selectedCountry, this.selectedStationID)
 
       const instrumentRetained = instruments.sortby_instrument_name.some((instrument) => {
         return instrument.properties.instrument_name === this.selectedInstrument
@@ -472,8 +507,6 @@ export default {
         this.selectedInstrument = null
       }
 
-      this.selectedStation = station
-      this.selectedStationID = station.identifier
       this.refreshDropdowns()
     },
     countryToSelectOption(country) {
@@ -543,6 +576,10 @@ export default {
         if (value !== null) {
           queryParams += '&' + field + '=' + value
         }
+      }
+
+      if (this.mapBoundingBox !== null) {
+        queryParams += '&bbox=' + this.boundingBoxArray
       }
 
       const response = await axios.get(dataRecordsURL + '?' + queryParams)

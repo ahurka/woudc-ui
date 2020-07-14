@@ -5,6 +5,7 @@
       ref="woudc-map"
       :zoom="startZoom"
       :center="startCenter"
+      @click="emitSelection(null)"
       @moveend="emitBoundaryChange"
     >
       <l-tile-layer :url="tileURLTemplate" />
@@ -25,7 +26,6 @@
         :ref="element.identifier + '-marker'"
         :lat-lng="element.geometry.coordinates"
         @click="emitSelection(element)"
-        @popupclose="emitSelection(null)"
       >
         <l-popup>
           <slot name="popup" :item="element">
