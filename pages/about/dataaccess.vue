@@ -87,7 +87,7 @@
       <i18n path="about.access.search.blurb.body-intro" tag="p">
         <template v-slot:search>
           <nuxt-link :to="localePath('data-explore')">
-            {{ $t('common.search') }}
+            {{ $t('common.search-page') }}
           </nuxt-link>
         </template>
       </i18n>

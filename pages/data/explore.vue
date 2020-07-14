@@ -55,7 +55,7 @@
     </div>
     <h3>{{ $t('data.explore.instrument.title') }}</h3>
     <v-select
-      :value="selectedInstrument"
+      v-model="selectedInstrument"
       :items="instrumentOptions"
       :label="$t('data.explore.instrument.placeholder')"
       menu-props="auto"
@@ -97,6 +97,22 @@
         </div>
       </template>
     </v-text-field>
+    <div>
+      <v-btn
+        class="btn-left"
+        color="primary"
+        @click="oldSearchParams.exists = true"
+      >
+        {{ $t('common.search') }}
+      </v-btn>
+      <v-btn class="btn-right" @click="reset()">
+        {{ $t('common.reset') }}
+      </v-btn>
+    </div>
+    <h2>{{ $t('data.explore.search-results') }}</h2>
+    <span v-if="!oldSearchParams.exists" class="red--text">
+      {{ $t('data.explore.no-results') }}
+    </span>
   </v-layout>
 </template>
 
@@ -127,6 +143,9 @@ export default {
     return {
       countries: { byID: [], byName: [] },
       instruments: [],
+      oldSearchParams: {
+        exists: false
+      },
       orderCountryByID: false,
       orderStationByID: false,
       minSelectableYear: 1924,
@@ -362,6 +381,19 @@ export default {
         value: stationID
       }
     },
+    reset() {
+      this.selectedDataset = null
+      this.selectedCountry = null
+      this.selectedStation = null
+      this.selectedInstrument = null
+
+      this.refreshDropdowns()
+
+      this.selectedYearRange = [
+        this.minSelectableYear,
+        this.maxSelectableYear
+      ]
+    },
     async refreshDropdowns() {
       const { countries, stations, instruments } = await this.sendDropdownRequest(
         this.selectedDataset, this.selectedCountry, this.selectedStation
@@ -437,5 +469,15 @@ export default {
   padding-top: 0px;
   padding-bottom: 0px;
   min-height: 32px;
+}
+
+.btn-left {
+  border-bottom-right-radius: 0px;
+  border-top-right-radius: 0px;
+}
+
+.btn-right {
+  border-bottom-left-radius: 0px;
+  border-top-left-radius: 0px;
 }
 </style>

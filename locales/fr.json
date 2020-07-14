@@ -32,9 +32,11 @@
     "products": "produits de données",
     "registration-form": "formulaire d’inscription des contributeurs",
     "registration-page": "page d’inscription",
+    "reset": "Réinitialisation",
     "stations": "stations enregistrées",
     "stations-page": "liste des stations",
-    "search": "recherche de données / téléchargement",
+    "search": "Recherche",
+    "search-page": "recherche de données / téléchargement",
     "sop": "procédures opérationnelles normalisées",
     "submission": "soumission des données | soumissions de données",
     "table-instructions": {
@@ -926,11 +928,13 @@
           "umkehr2": "UmkehrN14 (Niveau 2.0)"
         }
       },
+      "end": "Fin",
       "instrument": {
         "placeholder": "Choisis un Instrument",
         "title": "Instrument"
       },
-      "end": "Fin",
+      "no-results": "Aucune recherche n’a été effectuée.",
+      "search-results": "Résultats de la recherche",
       "start": "Début",
       "station": {
         "placeholder": "Choisis une Station",

@@ -27,7 +27,7 @@
         </template>
         <template v-slot:search>
           <nuxt-link :to="localePath('data-explore')">
-            {{ $t('common.search') }}
+            {{ $t('common.search-page') }}
           </nuxt-link>
         </template>
         <template v-slot:products>
